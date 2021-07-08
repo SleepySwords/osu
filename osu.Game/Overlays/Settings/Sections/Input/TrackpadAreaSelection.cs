@@ -7,7 +7,7 @@ using osu.Framework.Bindables;
 using osu.Framework.Graphics;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Graphics.Shapes;
-using osu.Framework.Input.Handlers.Trackpad;
+using osu.Framework.Input.Handlers.Touchpad;
 using osu.Game.Graphics;
 using osu.Game.Graphics.Sprites;
 using osuTK;
@@ -17,7 +17,8 @@ namespace osu.Game.Overlays.Settings.Sections.Input
 {
     public class TrackpadAreaSelection : CompositeDrawable
     {
-        private readonly TrackpadHandler handler;
+        private readonly TouchpadHandler handler;
+
 
         private Container tabletContainer;
         private Container usableAreaContainer;
@@ -25,10 +26,12 @@ namespace osu.Game.Overlays.Settings.Sections.Input
         private readonly Bindable<Vector2> areaOffset = new Bindable<Vector2>();
         private readonly Bindable<Vector2> areaSize = new Bindable<Vector2>();
 
+        private readonly Vector2 sizeMultiplier = new Vector2(300, 200);
+
         private Box usableFill;
         private OsuSpriteText usableAreaText;
 
-        public TrackpadAreaSelection(TrackpadHandler handler)
+        public TrackpadAreaSelection(TouchpadHandler handler)
         {
             this.handler = handler;
 
@@ -45,7 +48,7 @@ namespace osu.Game.Overlays.Settings.Sections.Input
                 Masking = true,
                 CornerRadius = 5,
                 BorderThickness = 2,
-                BorderColour = colour.Red,
+                BorderColour = colour.Gray3,
                 Children = new Drawable[]
                 {
                     new Box
@@ -55,7 +58,6 @@ namespace osu.Game.Overlays.Settings.Sections.Input
                     },
                     usableAreaContainer = new Container
                     {
-                        BorderColour = colour.Blue,
                         Origin = Anchor.Centre,
                         Children = new Drawable[]
                         {
@@ -99,24 +101,24 @@ namespace osu.Game.Overlays.Settings.Sections.Input
             areaOffset.BindTo(handler.AreaOffset);
             areaOffset.BindValueChanged(val =>
             {
-                usableAreaContainer.MoveTo(val.NewValue * 200, 100, Easing.OutQuint)
+                usableAreaContainer.MoveTo(val.NewValue * sizeMultiplier, 100, Easing.OutQuint)
                                    .OnComplete(_ => checkBounds()); // required as we are using SSDQ.
             }, true);
 
             areaSize.BindTo(handler.AreaSize);
             areaSize.BindValueChanged(val =>
             {
-                usableAreaContainer.ResizeTo(val.NewValue * 200, 100, Easing.OutQuint)
+                usableAreaContainer.ResizeTo(val.NewValue * sizeMultiplier, 100, Easing.OutQuint)
                                    .OnComplete(_ => checkBounds()); // required as we are using SSDQ.
 
-                int x = (int)(val.NewValue.X * 200);
-                int y = (int)(val.NewValue.Y * 200);
+                int x = (int)(val.NewValue.X * sizeMultiplier.X);
+                int y = (int)(val.NewValue.Y * sizeMultiplier.Y);
                 int commonDivider = greatestCommonDivider(x, y);
 
                 usableAreaText.Text = $"{(float)x / commonDivider}:{(float)y / commonDivider}";
             }, true);
 
-            tabletContainer.Size = new Vector2(200, 200);
+            tabletContainer.Size = sizeMultiplier;
             checkBounds();
             // initial animation should be instant.
             FinishTransforms(true);
@@ -151,7 +153,7 @@ namespace osu.Game.Overlays.Settings.Sections.Input
         {
             base.Update();
 
-            Vector2 size = new Vector2(200, 100);
+            Vector2 size = sizeMultiplier;
 
             float maxDimension = size.LengthFast;
 

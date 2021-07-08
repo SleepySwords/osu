@@ -9,7 +9,7 @@ using osu.Framework.Input.Handlers.Joystick;
 using osu.Framework.Input.Handlers.Midi;
 using osu.Framework.Input.Handlers.Mouse;
 using osu.Framework.Input.Handlers.Tablet;
-using osu.Framework.Input.Handlers.Trackpad;
+using osu.Framework.Input.Handlers.Touchpad;
 using osu.Framework.Platform;
 using osu.Game.Overlays.Settings.Sections.Input;
 
@@ -67,7 +67,7 @@ namespace osu.Game.Overlays.Settings.Sections
                     break;
 
                 // whitelist the handlers which should be displayed to avoid any weird cases of users touching settings they shouldn't.
-                case TrackpadHandler th:
+                case TouchpadHandler th:
                     section = new TrackpadSettings(th);
                     break;
                 case JoystickHandler _:

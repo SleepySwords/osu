@@ -5,7 +5,7 @@ using osu.Framework.Allocation;
 using osu.Framework.Bindables;
 using osu.Framework.Configuration;
 using osu.Framework.Graphics;
-using osu.Framework.Input.Handlers.Trackpad;
+using osu.Framework.Input.Handlers.Touchpad;
 using osu.Game.Configuration;
 using osu.Game.Graphics.UserInterface;
 using osu.Game.Input;
@@ -22,7 +22,7 @@ namespace osu.Game.Overlays.Settings.Sections.Input
     {
         protected override string Header => "Trackpad";
 
-        private readonly TrackpadHandler handler;
+        private readonly TouchpadHandler handler;
 
         private readonly Bindable<Vector2> areaOffset = new Bindable<Vector2>();
         private readonly Bindable<Vector2> areaSize = new Bindable<Vector2>();
@@ -37,6 +37,8 @@ namespace osu.Game.Overlays.Settings.Sections.Input
 
         private ScheduledDelegate aspectRatioApplication;
 
+        private FillFlowContainer mainSettings;
+
         /// <summary>
         /// Based on ultrawide monitor configurations.
         /// </summary>
@@ -49,7 +51,7 @@ namespace osu.Game.Overlays.Settings.Sections.Input
             Precision = 0.01f,
         };
 
-        public TrackpadSettings(TrackpadHandler handler)
+        public TrackpadSettings(TouchpadHandler handler)
         {
             this.handler = handler;
         }
@@ -59,45 +61,56 @@ namespace osu.Game.Overlays.Settings.Sections.Input
         {
             Children = new Drawable[]
             {
-                new TrackpadAreaSelection(handler)
-                {
-                    RelativeSizeAxes = Axes.X,
-                    Height = 300,
-                },
                 new SettingsCheckbox
                 {
                     LabelText = "Enabled",
                     Current = handler.Enabled
                 },
-                new SensitivitySetting
+                mainSettings = new FillFlowContainer
                 {
-                    LabelText = "X Offset",
-                    Current = offsetX
-                },
-                new SensitivitySetting
-                {
-                    LabelText = "Y Offset",
-                    Current = offsetY
-                },
-                new SensitivitySetting
-                {
-                    LabelText = "Aspect Ratio",
-                    Current = aspectRatio
-                },
-                new SettingsCheckbox
-                {
-                    LabelText = "Lock Aspect Ratio",
-                    Current = aspectLock
-                },
-                new SensitivitySetting
-                {
-                    LabelText = "Width",
-                    Current = sizeX
-                },
-                new SensitivitySetting
-                {
-                    LabelText = "Height",
-                    Current = sizeY
+                    Alpha = 0,
+                    RelativeSizeAxes = Axes.X,
+                    AutoSizeAxes = Axes.Y,
+                    Spacing = new Vector2(0, 8),
+                    Direction = FillDirection.Vertical,
+                    Children = new Drawable[]
+                    {
+                        new TrackpadAreaSelection(handler)
+                        {
+                            RelativeSizeAxes = Axes.X,
+                            Height = 300,
+                        },
+                        new SensitivitySetting
+                        {
+                            LabelText = "X Offset",
+                            Current = offsetX
+                        },
+                        new SensitivitySetting
+                        {
+                            LabelText = "Y Offset",
+                            Current = offsetY
+                        },
+                        new SensitivitySetting
+                        {
+                            LabelText = "Aspect Ratio",
+                            Current = aspectRatio
+                        },
+                        new SettingsCheckbox
+                        {
+                            LabelText = "Lock Aspect Ratio",
+                            Current = aspectLock
+                        },
+                        new SensitivitySetting
+                        {
+                            LabelText = "Width",
+                            Current = sizeX
+                        },
+                        new SensitivitySetting
+                        {
+                            LabelText = "Height",
+                            Current = sizeY
+                        }
+                    }
                 }
             };
         }
@@ -105,6 +118,12 @@ namespace osu.Game.Overlays.Settings.Sections.Input
         protected override void LoadComplete()
         {
             base.LoadComplete();
+
+            offsetX.Default = 0.5f;
+            offsetY.Default = 0.5f;
+
+            sizeX.Default = 1;
+            sizeY.Default = 1;
 
             areaOffset.BindTo(handler.AreaOffset);
             areaOffset.BindValueChanged(val =>
@@ -146,11 +165,11 @@ namespace osu.Game.Overlays.Settings.Sections.Input
                 aspectRatioApplication = Schedule(() => forceAspectRatio(aspect.NewValue));
             });
 
-            offsetX.Default = 0.5f;
-            offsetY.Default = 0.5f;
-
-            sizeX.Default = 0.9f;
-            sizeY.Default = 0.9f;
+            handler.Enabled.BindValueChanged(val =>
+            {
+                if (val.NewValue) mainSettings.Show();
+                else mainSettings.Hide();
+            }, true);
         }
 
 
@@ -173,9 +192,9 @@ namespace osu.Game.Overlays.Settings.Sections.Input
 
                 // if lock is applied (or the specified values were out of range) aim to adjust the axis the user was not adjusting to conform.
                 if (sizeChanged == sizeX)
-                    sizeY.Value = (int)(areaSize.Value.X / aspectRatio.Value);
+                    sizeY.Value = (areaSize.Value.X / aspectRatio.Value);
                 else
-                    sizeX.Value = (int)(areaSize.Value.Y * aspectRatio.Value);
+                    sizeX.Value = (areaSize.Value.Y * aspectRatio.Value);
             }
             finally
             {
@@ -189,12 +208,12 @@ namespace osu.Game.Overlays.Settings.Sections.Input
         {
             aspectLock.Value = false;
 
-            int proposedHeight = (int)(sizeX.Value / aspectRatio);
+            float proposedHeight = (sizeX.Value / aspectRatio);
 
             if (proposedHeight < sizeY.MaxValue)
                 sizeY.Value = proposedHeight;
             else
-                sizeX.Value = (int)(sizeY.Value * aspectRatio);
+                sizeX.Value = (sizeY.Value * aspectRatio);
 
             updateAspectRatio();
 
