@@ -3,18 +3,13 @@
 
 using osu.Framework.Allocation;
 using osu.Framework.Bindables;
-using osu.Framework.Configuration;
 using osu.Framework.Graphics;
 using osu.Framework.Input.Handlers.Touchpad;
-using osu.Game.Configuration;
 using osu.Game.Graphics.UserInterface;
-using osu.Game.Input;
+using osu.Framework.Localisation;
 using osuTK;
 using osu.Framework.Graphics.Containers;
-using osu.Framework.Input.Handlers.Tablet;
-using osu.Framework.Platform;
 using osu.Framework.Threading;
-using osu.Game.Graphics.Sprites;
 
 namespace osu.Game.Overlays.Settings.Sections.Input
 {
@@ -236,7 +231,7 @@ namespace osu.Game.Overlays.Settings.Sections.Input
 
         private class SensitivitySlider : OsuSliderBar<float>
         {
-            public override string TooltipText => Current.Disabled ? "enable high precision mouse to adjust sensitivity" : $"{base.TooltipText}x";
+            public override LocalisableString TooltipText => Current.Disabled ? "enable high precision mouse to adjust sensitivity" : $"{base.TooltipText}x";
         }
     }
 }
